@@ -1,28 +1,54 @@
 import { NextFunction, Request, Response } from 'express';
-import mongoose from 'mongoose';
-import Entry from '../models/Entry';
+import entryService from '../services/entry';
 
-const createEntry = (req: Request, res: Response, next: NextFunction) => {
-    const {name, description, location, date} = req.body;
+const createEntryHandler = async (req: Request, res: Response, next: NextFunction) => {
+    const entry = await entryService.createEntry(req.body)
 
-    const entry = new Entry({
-        _id: new mongoose.Types.ObjectId(),
-        name,
-        description,
-        location,
-        date
-    });
-
-    return entry
-        .save()
-        .then((entry) => res.status(201).json({entry}))
-        .catch((error) => res.status(500).json({error}))
+    return res.send(entry)
 };
 
-const readAll = (req: Request, res: Response, next: NextFunction) => {
-    return Entry.find()
-        .then((entry) =>  res.status(200).json({entry}))
-        .catch((error) => res.status(500).json({error}))
+const readEntryHandler = async (req: Request, res: Response, next: NextFunction) => {
+    const entryId = req.params.entryId;
+    const entry = await entryService.findEntry({entryId})
+
+    if (!entry) {
+        return res.status(404).json({message: 'Not Found'})
+    }
+
+    return res.send(entry);
 }
 
-export default {createEntry, readAll};
+const updateEntryHandler = async (req: Request, res: Response, next: NextFunction) => {
+    const entryId = req.params.entryId;
+    const update = req.body;
+
+    const entry = await entryService.findEntry({entryId});
+
+    if (!entry){
+        return res.status(404).json({message: 'Not Found'})
+    }
+
+    const updatedEntry = await entryService.updateEntry({entryId}, update, {new: true})
+    
+    return res.send(updatedEntry);
+}
+
+const deleteEntryHandler = async (req: Request, res: Response, next: NextFunction) => {
+    const entryId = req.params.entryId;
+
+    const entry = await entryService.findEntry({entryId});
+
+    if (!entry){
+        return res.status(404).json({message: 'Not Found'})
+    }
+
+    await entryService.deleteEntry({entryId});
+    return res.sendStatus(200);
+}
+
+const readAllHandler = async (req: Request, res: Response, next: NextFunction) => {
+    const entries = await entryService.readAll();
+    return res.send(entries);
+}
+
+export default {createEntryHandler, readAllHandler, readEntryHandler, deleteEntryHandler, updateEntryHandler};

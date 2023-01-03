@@ -17,7 +17,7 @@ mongoose
 	.catch((error) => {
 		Logging.error('Unable to connect: ');
 		Logging.error(error);
-	});
+	});	
 
 const StartServer = () => {
 	router.use((req, res, next) => {
@@ -62,4 +62,7 @@ const StartServer = () => {
 		return res.status(404).json({ message: error.message });
 	});
 	http.createServer(router).listen(config.server.port, () => Logging.info(`Server is running on port ${config.server.port}.`));
+	return router;
 };
+
+export default StartServer;
